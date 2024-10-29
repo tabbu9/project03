@@ -5,8 +5,7 @@ FROM amazonlinux
 RUN yum -y update && \ 
     yum -y install nginx && \ 
     yum clean all && \ 
-    echo "<!DOCTYPE html><html><head><title>Welcome to HINTechnologies !!!</title></head><body></body></html>" > /usr/share/nginx/html/index.html 
-
+    
 # Expose port 80 for Nginx 
 EXPOSE 80 
 
