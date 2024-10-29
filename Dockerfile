@@ -4,8 +4,8 @@ FROM amazonlinux
 # Install Nginx and clean up unnecessary files 
 RUN yum -y update && \ 
     yum -y install nginx && \ 
-    yum clean all && \ 
-    
+    yum clean all 
+
 # Expose port 80 for Nginx 
 EXPOSE 80 
 
