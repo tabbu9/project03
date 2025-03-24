@@ -17,7 +17,7 @@ pipeline {
 
     environment {
         DOCKER_IMAGE = 'project03'
-        DOCKER_HUB_REPO = 'harishgorla5/project03'
+        DOCKER_HUB_REPO = 'tabbu9/project03'
         WELCOME_PAGE_PATH = './index.html' // Path to your index.html in the repo
         CONTAINER_PATH = '/usr/share/nginx/html/index.html' // Nginx document root
     }
@@ -27,8 +27,7 @@ pipeline {
             steps {
                 // Specify the branch to checkout
                 script {
-                    git branch: 'main', url: 'https://github.com/harishgorla5/project03.git'
-                }
+                    git branch: 'main', url: 'https://github.com/tabbu9/project03.git'                }
             }
         }
 
