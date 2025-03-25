@@ -22,7 +22,7 @@ pipeline {
         CONTAINER_PATH = '/usr/share/nginx/html/index.html' // Nginx document root
 
         // 🔴 Hardcoded Docker Hub Credentials (NOT RECOMMENDED)
-        DOCKER_HUB_USER = 'syedquadri2007@gmail.com'
+        DOCKER_HUB_USER = 'tabbu9'
         DOCKER_HUB_PASS = 'SyedJaheed@9'
     }
 
