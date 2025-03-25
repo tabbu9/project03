@@ -20,6 +20,10 @@ pipeline {
         DOCKER_HUB_REPO = 'tabbu9/project03'
         WELCOME_PAGE_PATH = './index.html' // Path to index.html in the repo
         CONTAINER_PATH = '/usr/share/nginx/html/index.html' // Nginx document root
+
+        // 🔴 Hardcoded Docker Hub Credentials (NOT RECOMMENDED)
+        DOCKER_HUB_USER = 'syedquadri2007@gmail.com'
+        DOCKER_HUB_PASS = 'SyedJaheed@9'
     }
 
     stages {
@@ -72,31 +76,11 @@ pipeline {
             }
         }
 
-        stage('Check for Latest Tag in Docker Hub') {
-            steps {
-                script {
-                    def tags = sh(script: "curl -s https://registry.hub.docker.com/v2/repositories/${DOCKER_HUB_REPO}/tags/ | jq -r '.results[].name'", returnStdout: true).trim()
-                    def latestTagExists = tags.contains("latest")
-
-                    if (latestTagExists) {
-                        def latestVersion = sh(script: "echo '${tags}' | grep -Eo '0\\.1\\.[0-9]+' | sort -V | tail -n1", returnStdout: true).trim()
-                        def newVersion = latestVersion ? latestVersion.replaceFirst(/(0.1.)(\d+)/, { _, prefix, num -> "${prefix}${num.toInteger() + 1}" }) : "0.1.1"
-                        currentBuild.description = "New Version: ${newVersion}"
-                        echo "New version tag: ${newVersion}"
-                    } else {
-                        echo 'No latest tag found, using 0.1.0'
-                        currentBuild.description = "New Version: 0.1.0"
-                    }
-                }
-            }
-        }
-
         stage('Push to Docker Hub') {
             steps {
                 script {
-                    withCredentials([usernamePassword(credentialsId: 'docker-hub-login', usernameVariable: 'DOCKER_HUB_USER', passwordVariable: 'DOCKER_HUB_PASS')]) {
-                        sh "echo '${DOCKER_HUB_PASS}' | docker login -u '${DOCKER_HUB_USER}' --password-stdin"
-                    }
+                    // 🔴 Hardcoded login command (Not secure)
+                    sh "echo '${DOCKER_HUB_PASS}' | docker login -u '${DOCKER_HUB_USER}' --password-stdin"
                     sh "docker push ${DOCKER_HUB_REPO}:latest"
                 }
             }
