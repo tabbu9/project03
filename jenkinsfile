@@ -18,23 +18,23 @@ pipeline {
     environment {
         DOCKER_IMAGE = 'project03'
         DOCKER_HUB_REPO = 'tabbu9/project03'
-        WELCOME_PAGE_PATH = './index.html' // Path to your index.html in the repo
+        WELCOME_PAGE_PATH = './index.html' // Path to index.html in the repo
         CONTAINER_PATH = '/usr/share/nginx/html/index.html' // Nginx document root
     }
 
     stages {
         stage('Checkout Code') {
             steps {
-                // Specify the branch to checkout
                 script {
-                    git branch: 'main', url: 'https://github.com/tabbu9/project03.git'                }
+                    git branch: 'main', url: 'https://github.com/tabbu9/project03.git'
+                }
             }
         }
 
         stage('Build Docker Image') {
             steps {
                 script {
-                    sh 'docker build -t ${DOCKER_IMAGE}:latest .'
+                    sh "docker build -t ${DOCKER_IMAGE}:latest ."
                 }
             }
         }
@@ -42,11 +42,7 @@ pipeline {
         stage('Remove Existing Container') {
             steps {
                 script {
-                    try {
-                        sh "docker rm -f ${DOCKER_IMAGE}"
-                    } catch (Exception e) {
-                        echo 'No existing container to remove.'
-                    }
+                    sh "docker rm -f ${DOCKER_IMAGE} || true"
                 }
             }
         }
@@ -62,7 +58,6 @@ pipeline {
         stage('Update Welcome Page') {
             steps {
                 script {
-                    // Copy the updated index.html into the running container
                     sh "docker cp ${WELCOME_PAGE_PATH} ${DOCKER_IMAGE}:${CONTAINER_PATH}"
                 }
             }
@@ -71,9 +66,7 @@ pipeline {
         stage('Tag Image as Latest') {
             steps {
                 script {
-                    // Remove old 'latest' image if it exists
                     sh "docker rmi -f ${DOCKER_HUB_REPO}:latest || true"
-                    // Tag the current image as latest
                     sh "docker tag ${DOCKER_IMAGE}:latest ${DOCKER_HUB_REPO}:latest"
                 }
             }
@@ -84,11 +77,10 @@ pipeline {
                 script {
                     def tags = sh(script: "curl -s https://registry.hub.docker.com/v2/repositories/${DOCKER_HUB_REPO}/tags/", returnStdout: true)
                     def latestTagExists = tags.contains('\"name\": \"latest\"')
-                    
+
                     if (latestTagExists) {
-                        // Fetch the latest version and increment
                         def latestVersion = sh(script: "echo ${tags} | jq -r '.results | .[] | select(.name | startswith(\"0.1\")) | .name' | sort -V | tail -n 1", returnStdout: true).trim()
-                        def newVersion = latestVersion.replaceFirst(/0.1\.(\\d+)/, { match, seq -> "0.1.${seq.toInteger() + 1}" })
+                        def newVersion = latestVersion.replaceFirst(/0.1\.(\d+)/) { match, seq -> "0.1.${seq.toInteger() + 1}" }
                         currentBuild.description = "New Version: ${newVersion}"
                     } else {
                         echo 'No latest tag found, using 0.1.0'
@@ -101,6 +93,9 @@ pipeline {
         stage('Push to Docker Hub') {
             steps {
                 script {
+                    withCredentials([usernamePassword(credentialsId: 'docker-hub-login', usernameVariable: 'DOCKER_HUB_USER', passwordVariable: 'DOCKER_HUB_PASS')]) {
+                        sh "echo '${DOCKER_HUB_PASS}' | docker login -u '${DOCKER_HUB_USER}' --password-stdin"
+                    }
                     sh "docker push ${DOCKER_HUB_REPO}:latest"
                 }
             }
