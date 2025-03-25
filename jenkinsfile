@@ -75,13 +75,14 @@ pipeline {
         stage('Check for Latest Tag in Docker Hub') {
             steps {
                 script {
-                    def tags = sh(script: "curl -s https://registry.hub.docker.com/v2/repositories/${DOCKER_HUB_REPO}/tags/", returnStdout: true)
-                    def latestTagExists = tags.contains('\"name\": \"latest\"')
+                    def tags = sh(script: "curl -s https://registry.hub.docker.com/v2/repositories/${DOCKER_HUB_REPO}/tags/ | jq -r '.results[].name'", returnStdout: true).trim()
+                    def latestTagExists = tags.contains("latest")
 
                     if (latestTagExists) {
-                        def latestVersion = sh(script: "echo ${tags} | jq -r '.results | .[] | select(.name | startswith(\"0.1\")) | .name' | sort -V | tail -n 1", returnStdout: true).trim()
-                        def newVersion = latestVersion.replaceFirst(/0.1\.(\d+)/) { match, seq -> "0.1.${seq.toInteger() + 1}" }
+                        def latestVersion = sh(script: "echo '${tags}' | grep -Eo '0\\.1\\.[0-9]+' | sort -V | tail -n1", returnStdout: true).trim()
+                        def newVersion = latestVersion ? latestVersion.replaceFirst(/(0.1.)(\d+)/, { _, prefix, num -> "${prefix}${num.toInteger() + 1}" }) : "0.1.1"
                         currentBuild.description = "New Version: ${newVersion}"
+                        echo "New version tag: ${newVersion}"
                     } else {
                         echo 'No latest tag found, using 0.1.0'
                         currentBuild.description = "New Version: 0.1.0"
